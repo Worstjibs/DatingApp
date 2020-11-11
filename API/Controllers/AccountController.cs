@@ -36,7 +36,8 @@ namespace API.Controllers {
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return new UserDto {
+            return new UserDto
+            {
                 Username = user.UserName,
                 Token = _tokenService.CreateToken(user)
             };
@@ -44,7 +45,7 @@ namespace API.Controllers {
 
         [HttpPost("login")]
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto) {
-            var user = await _context.Users.SingleOrDefaultAsync(user => user.UserName == loginDto.Username);
+            var user = await _context.Users.SingleOrDefaultAsync(user => user.UserName == loginDto.Username.ToLower());
 
             if (user == null) return Unauthorized("Invalid Username or Password");
 
@@ -53,7 +54,8 @@ namespace API.Controllers {
             var computedHash = hamc.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
 
             if (computedHash.SequenceEqual(user.PasswordHash)) {
-                return new UserDto {
+                return new UserDto
+                {
                     Username = user.UserName,
                     Token = _tokenService.CreateToken(user)
                 };
