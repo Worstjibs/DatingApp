@@ -1,18 +1,21 @@
-using API.Data;
-using API.Interfaces;
-using API.Services;
-using Microsoft.EntityFrameworkCore;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 
 namespace API.Extensions {
     public static class IdentifyServiceExtensions {
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config) {
-            services.AddScoped<ITokenService, TokenService>();
-
-            services.AddDbContext<DataContext>(options => {
-                options.UseSqlite(config.GetConnectionString("DefaultConnection"));
-            });
+        public static IServiceCollection AddIdentifyServices(this IServiceCollection services, IConfiguration config) {
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options => {
+                    options.TokenValidationParameters = new TokenValidationParameters {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["TokenKey"])),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
 
             return services;
         }
