@@ -17,7 +17,7 @@ export class AuthGuard implements CanActivate {
                 if (user) return true;
                 this.toastr.error('You must be logged in to access this section.');
             })
-        )
+        );
     }
 
 }
