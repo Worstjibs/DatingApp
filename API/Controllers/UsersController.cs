@@ -27,7 +27,7 @@ namespace API.Controllers {
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery]UserParams userParams) {
+        public async Task<ActionResult<PagedList<MemberDto>>> GetUsers([FromQuery]UserParams userParams) {
             // Get the logged in user (ClaimsPrinciple) from ControllerBase 
             var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
             userParams.CurrentUsername = user.UserName;
