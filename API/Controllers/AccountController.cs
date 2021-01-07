@@ -70,7 +70,7 @@ namespace API.Controllers {
             // Compare the computed hash with the user's hash
             if (computedHash.SequenceEqual(user.PasswordHash)) {
                 var photos = user.Photos;
-                string photoUrl = user.Photos.FirstOrDefault(x => x.IsMain).Url;
+                string photoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url;
 
                 UserDto userDto = new UserDto
                 {
@@ -78,7 +78,8 @@ namespace API.Controllers {
                     Token = _tokenService.CreateToken(user),
                     // Add the user's main photo to the UserDto
                     PhotoUrl = photoUrl,
-                    KnownAs = user.KnownAs
+                    KnownAs = user.KnownAs,
+                    Gender = user.Gender
                 };
 
                 return userDto;

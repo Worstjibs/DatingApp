@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using API.DTOs;
 using API.Entities;
 using API.Extensions;
+using API.Helpers;
 using API.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -26,9 +27,23 @@ namespace API.Controllers {
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers() {
+        public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery]UserParams userParams) {
+            // Get the logged in user (ClaimsPrinciple) from ControllerBase 
+            var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
+            userParams.CurrentUsername = user.UserName;
+
+            if (string.IsNullOrEmpty(userParams.Gender)) 
+                userParams.Gender = user.Gender == "male" ? "female" : "male";
+
             // Get the list of members from the UserRepository
-            var users = await _userRepository.GetMembersAsync();
+            var users = await _userRepository.GetMembersAsync(userParams);
+
+            Response.AddPaginationHeader(
+                users.CurrentPage, 
+                users.PageSize, 
+                users.TotalCount, 
+                users.TotalPages
+            );
 
             return Ok(users);
         }
@@ -41,8 +56,9 @@ namespace API.Controllers {
 
         [HttpPut]
         public async Task<ActionResult> UpdateUser(MemberUpdateDto memberUpdateDto) {
-            // Get the user from the UserRepository, using current logged in user from claims?
-            // uses extension method from ClaimsPrincipleExtensions
+            // Get the user from the UserRepository, using current logged in user 
+            // from the User property on ControllerBase.
+            // Uses extension method from ClaimsPrincipleExtensions
             var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
 
             // Map the MemberDto to the AppUser

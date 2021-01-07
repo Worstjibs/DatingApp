@@ -1,9 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using API.DTOs;
 using API.Entities;
+using API.Helpers;
 using API.Interfaces;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -17,6 +19,32 @@ namespace API.Data {
         public UserRespository(DataContext context, IMapper mapper) {
             _mapper = mapper;
             _context = context;
+        }
+
+        public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams) {
+            // Setup a query for Members from the DB
+            IQueryable<AppUser> query = _context.Users.AsQueryable();
+
+            // Filter out the current user
+            query = query.Where(u => u.UserName != userParams.CurrentUsername);
+            // Filter for members of the opposite Gender by default        
+            query = query.Where(u => u.Gender == userParams.Gender);
+
+            var minDob = DateTime.Today.AddYears(-userParams.MaxAge - 1);
+            var maxDob = DateTime.Today.AddYears(-userParams.MinAge);
+
+            // Query for users between the min and max date of birth
+            query = query.Where(u => minDob <= u.DateOfBirth && u.DateOfBirth <= maxDob);
+
+            // New switch statement to order the query
+            query = userParams.OrderBy switch {
+                "createdOn" => query.OrderByDescending(u => u.CreatedOn),
+                _ => query.OrderByDescending(u => u.LastActive)
+            };
+
+            IQueryable<MemberDto> source = query.ProjectTo<MemberDto>(_mapper.ConfigurationProvider).AsNoTracking();
+
+            return await PagedList<MemberDto>.CreateAsync(source, userParams.PageNumber, userParams.PageSize);
         }
 
         public async Task<AppUser> GetUserByIdAsync(int id) {
@@ -48,12 +76,6 @@ namespace API.Data {
                 .Where(x => x.UserName == username)
                 .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
                 .SingleOrDefaultAsync();
-        }
-
-        public async Task<IEnumerable<MemberDto>> GetMembersAsync() {
-            return await _context.Users
-                .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
         }
     }
 }
