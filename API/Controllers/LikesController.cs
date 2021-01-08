@@ -50,7 +50,7 @@ namespace API.Controllers {
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedList<LikeDto>>> GetUserLikes([FromQuery]LikesParams likesParams) {
+        public async Task<ActionResult<IEnumerable<LikeDto>>> GetUserLikes([FromQuery]LikesParams likesParams) {
             // Error checking on predicate before querying the LikesRepository
             if (likesParams.Predicate != "liked" && likesParams.Predicate != "likedBy") return BadRequest("Use either liked or likedBy as the predicate");
 
