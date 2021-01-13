@@ -27,8 +27,8 @@ namespace API.Data {
 
             // Filter out the current user
             query = query.Where(u => u.UserName != userParams.CurrentUsername);
-            // Filter for members of the opposite Gender by default        
-            query = query.Where(u => u.Gender == userParams.Gender);
+            // Filter for members of the opposite Gender by default
+            if (userParams.Gender != "both") query = query.Where(u => u.Gender == userParams.Gender);
 
             var minDob = DateTime.Today.AddYears(-userParams.MaxAge - 1);
             var maxDob = DateTime.Today.AddYears(-userParams.MinAge);
