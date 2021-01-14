@@ -34,7 +34,18 @@ export class AccountService {
                 }
                 return user;
             })
-        )
+        );
+    }
+
+    changePassword(model: any) {
+        return this.http.put(this.baseUrl + 'account/password', model).pipe(
+            map((user: User) => {
+                if (user) {
+                    this.setCurrentUser(user);
+                }
+                return user;
+            })
+        );
     }
 
     setCurrentUser(user: User) {

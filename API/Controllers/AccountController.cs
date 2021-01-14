@@ -3,8 +3,10 @@ using System.Threading.Tasks;
 using API.Data;
 using API.DTOs;
 using API.Entities;
+using API.Extensions;
 using API.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +21,7 @@ namespace API.Controllers {
         public AccountController(
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
-            ITokenService tokenService, 
+            ITokenService tokenService,
             IMapper mapper
         ) {
             _userManager = userManager;
@@ -59,6 +61,49 @@ namespace API.Controllers {
             };
         }
 
+        [Authorize]
+        [HttpPut("password")]
+        public async Task<ActionResult<UserDto>> ChangePassword(ChangePasswordDto changePasswordDto) {
+            // Get the username from Claim Principal
+            var username = User.GetUsername();
+
+            // Get the user from UserManager
+            var user = await _userManager.Users
+                .Include(u => u.Photos)
+                .SingleOrDefaultAsync(u => u.UserName == username);
+
+            // Error Checking on PasswordDto
+            if (changePasswordDto.CurrentPassword == changePasswordDto.NewPassword)
+                return BadRequest("New password must be different to current password");
+
+            // Change the password using UserManager
+            var result = await _userManager.ChangePasswordAsync(
+                    user, changePasswordDto.CurrentPassword,
+                    changePasswordDto.NewPassword);
+
+            if (!result.Succeeded) {
+                if (result.Errors.Count() > 0) {
+                    foreach (var error in result.Errors) {
+                        if (error.Code == "PasswordMismatch") return BadRequest("Invalid current password");
+                    }
+                }
+                return BadRequest("Error while updating password");
+            }
+
+            UserDto userDto = new UserDto {
+                Username = user.UserName,
+                Token = await _tokenService.CreateTokenAsync(user),
+                // Add the user's main photo to the UserDto
+                PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
+                // Add KnownAs to display in the top right
+                KnownAs = user.KnownAs,
+                // Add Gender for default filtering
+                Gender = user.Gender
+            };
+
+            return userDto;
+        }
+
         [HttpPost("login")]
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto) {
             // Get the User by username from DataContext
@@ -73,8 +118,7 @@ namespace API.Controllers {
 
             if (!result.Succeeded) return Unauthorized();
 
-            UserDto userDto = new UserDto
-            {
+            UserDto userDto = new UserDto {
                 Username = user.UserName,
                 Token = await _tokenService.CreateTokenAsync(user),
                 // Add the user's main photo to the UserDto

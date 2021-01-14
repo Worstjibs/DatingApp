@@ -9,6 +9,7 @@ import { ListsComponent } from './lists/lists.component';
 import { MemberDetailComponent } from './members/member-detail/member-detail.component';
 import { MemberEditComponent } from './members/member-edit/member-edit.component';
 import { MemberListComponent } from './members/member-list/member-list.component';
+import { MemberPasswordComponent } from './members/member-password/member-password.component';
 import { MessagesComponent } from './messages/messages.component';
 import { AdminGuard } from './_guards/admin.guard';
 import { AuthGuard } from './_guards/auth.guard';
@@ -28,6 +29,7 @@ const routes: Routes = [
             { path: 'members', component: MemberListComponent }, 
             { path: 'members/:username', component: MemberDetailComponent, resolve: {member: MemberDetailedResolver} }, 
             { path: 'member/edit', component: MemberEditComponent, canDeactivate: [PreventUnsavedChangesGuard] }, 
+            { path: 'member/password', component: MemberPasswordComponent },
             { path: 'lists', component: ListsComponent }, 
             { path: 'messages', component: MessagesComponent },
             { path: 'admin', component: AdminPanelComponent, canActivate: [AdminGuard] }
