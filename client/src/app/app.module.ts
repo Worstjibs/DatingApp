@@ -34,6 +34,7 @@ import { UserManagementComponent } from './admin/user-management/user-management
 import { PhotoManagementComponent } from './admin/photo-management/photo-management.component';
 import { RolesModalComponent } from './modals/roles-modal/roles-modal.component';
 import { MemberPasswordComponent } from './members/member-password/member-password.component';
+import { ConfirmDialogComponent } from './modals/confirm-dialog/confirm-dialog.component';
 
 @NgModule({
     declarations: [
@@ -59,7 +60,8 @@ import { MemberPasswordComponent } from './members/member-password/member-passwo
         UserManagementComponent,
         PhotoManagementComponent,
         RolesModalComponent,
-        MemberPasswordComponent
+        MemberPasswordComponent,
+        ConfirmDialogComponent
     ],
     imports: [
         BrowserModule,

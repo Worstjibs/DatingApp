@@ -33,30 +33,27 @@ namespace API.Data {
 
         public async Task<PagedList<MessageDto>> GetMessagesForUserAsync(MessageParams messageParams) {
             // Get the most recent messages as a query
+            // Map to a MessageDto early for better efficiency
             var query = _context.Messages
                 .OrderByDescending(m => m.MessageSent)
+                .ProjectTo<MessageDto>(_mapper.ConfigurationProvider)
                 .AsQueryable();
 
             // Filter the messages by the container content
             query = messageParams.Container.ToLower() switch
             {
-                "inbox" => query.Where(u => u.Recipient.UserName == messageParams.Username && u.RecipientDeleted == false),
-                "outbox" => query.Where(u => u.Sender.UserName == messageParams.Username && u.SenderDeleted == false),
-                _ => query.Where(u => u.Recipient.UserName == messageParams.Username && u.DateRead == null && u.RecipientDeleted == false)
+                "inbox" => query.Where(u => u.RecipientUsername == messageParams.Username && u.RecipientDeleted == false),
+                "outbox" => query.Where(u => u.SenderUsername == messageParams.Username && u.SenderDeleted == false),
+                _ => query.Where(u => u.RecipientUsername == messageParams.Username && u.DateRead == null && u.RecipientDeleted == false)
             };
 
-            // Map the query to a MessageDto
-            var messages = query.ProjectTo<MessageDto>(_mapper.ConfigurationProvider);
-
             // Return a PagedList using the query
-            return await PagedList<MessageDto>.CreateAsync(messages, messageParams.PageNumber, messageParams.PageSize);
+            return await PagedList<MessageDto>.CreateAsync(query, messageParams.PageNumber, messageParams.PageSize);
         }
 
         public async Task<IEnumerable<MessageDto>> GetMessageThreadAsync(string currentUsername, string recipientUsername) {
             // Get the messages that relate to the sender or recipient and vice versa
             var messages = await _context.Messages
-                .Include(u => u.Sender).ThenInclude(p => p.Photos)
-                .Include(u => u.Recipient).ThenInclude(p => p.Photos)
                 .Where(
                     m => m.RecipientUsername == currentUsername 
                     && m.SenderUsername == recipientUsername
@@ -65,6 +62,7 @@ namespace API.Data {
                     && m.RecipientUsername == recipientUsername
                     && m.SenderDeleted == false
                 ).OrderBy(m => m.MessageSent)
+                .ProjectTo<MessageDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
             
             // Get the unread messages as a list, and set the DateRead property on them to now
@@ -73,16 +71,10 @@ namespace API.Data {
                 foreach (var message in unreadMessages) {
                     message.DateRead = DateTime.UtcNow;
                 }
-
-                await _context.SaveChangesAsync();
             }
 
             // Map the messages to MessageDtos and return
             return _mapper.Map<IEnumerable<MessageDto>>(messages);
-        }
-
-        public async Task<bool> SaveAllAsync() {
-            return await _context.SaveChangesAsync() > 0;
         }
 
         public void AddGroup(Group group) {

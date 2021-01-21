@@ -35,9 +35,6 @@ namespace API.Helpers {
                     src.Sender.Photos.FirstOrDefault(p => p.IsMain == true).Url))
                 .ForMember(dest => dest.RecipientPhotoUrl, opt => opt.MapFrom(src => 
                     src.Recipient.Photos.FirstOrDefault(p => p.IsMain == true).Url));
-
-            // Map to UTC
-            CreateMap<DateTime, DateTime>().ConvertUsing(d => DateTime.SpecifyKind(d, DateTimeKind.Utc));
         }
     }
 }

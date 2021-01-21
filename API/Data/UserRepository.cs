@@ -12,11 +12,11 @@ using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data {
-    public class UserRespository : IUserRepository {
+    public class UserRepository : IUserRepository {
         private readonly DataContext _context;
         private readonly IMapper _mapper;
 
-        public UserRespository(DataContext context, IMapper mapper) {
+        public UserRepository(DataContext context, IMapper mapper) {
             _mapper = mapper;
             _context = context;
         }
@@ -63,10 +63,6 @@ namespace API.Data {
                 .ToListAsync();
         }
 
-        public async Task<bool> SaveAllAsync() {
-            return await _context.SaveChangesAsync() > 0;
-        }
-
         public void Update(AppUser user) {
             _context.Entry(user).State = EntityState.Modified;
         }
@@ -76,6 +72,13 @@ namespace API.Data {
                 .Where(x => x.UserName == username)
                 .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
                 .SingleOrDefaultAsync();
+        }
+
+        public async Task<string> GetUserGender(string username) {
+            return await _context.Users
+                .Where(x => x.UserName == username)
+                .Select(x => x.Gender)
+                .FirstOrDefaultAsync();
         }
     }
 }

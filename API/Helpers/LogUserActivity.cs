@@ -17,12 +17,12 @@ namespace API.Helpers {
             var userId = resultContext.HttpContext.User.GetUserId();
 
             // Get the UserRepository using GetService from DependencyInjection
-            var repo = resultContext.HttpContext.RequestServices.GetService<IUserRepository>();
+            var repo = resultContext.HttpContext.RequestServices.GetService<IUnitOfWork>();
 
             // Get the User from the Repository and set LastActive
-            var user = await repo.GetUserByIdAsync(userId);
-            user.LastActive = DateTime.Now;
-            await repo.SaveAllAsync();
+            var user = await repo.UserRepository.GetUserByIdAsync(userId);
+            user.LastActive = DateTime.UtcNow;
+            await repo.Complete();
         }
     }
 }
