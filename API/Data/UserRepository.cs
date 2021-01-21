@@ -51,10 +51,15 @@ namespace API.Data {
             return await _context.Users.FindAsync(id);
         }
 
-        public async Task<AppUser> GetUserByUsernameAsync(string username) {
-            return await _context.Users
-                .Include(p => p.Photos)
-                .SingleOrDefaultAsync(x => x.UserName == username);
+        public async Task<AppUser> GetUserByUsernameAsync(string username, bool isCurrentUser = false) {
+            var query = _context.Users
+                .Include(x => x.Photos)
+                .Where(x => x.UserName == username)
+                .AsQueryable();
+
+            if (isCurrentUser) query = query.IgnoreQueryFilters();
+
+            return await query.FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<AppUser>> GetUsersAsync() {
@@ -67,11 +72,15 @@ namespace API.Data {
             _context.Entry(user).State = EntityState.Modified;
         }
 
-        public async Task<MemberDto> GetMemberAsync(string username) {
-            return await _context.Users
+        public async Task<MemberDto> GetMemberAsync(string username, bool isCurrentUser) {
+            var query = _context.Users
                 .Where(x => x.UserName == username)
                 .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
-                .SingleOrDefaultAsync();
+                .AsQueryable();
+
+            if (isCurrentUser) query = query.IgnoreQueryFilters();
+
+            return await query.SingleOrDefaultAsync();
         }
 
         public async Task<string> GetUserGender(string username) {

@@ -53,8 +53,11 @@ namespace API.Controllers {
 
         [HttpGet("{username}", Name = "GetUser")]
         public async Task<ActionResult<MemberDto>> GetUser(string username) {
+            var user = await _unitOfWork.UserRepository.GetMemberAsync(username, User.GetUsername() == username);
+
+            if (user == null) return NotFound();
             // Get a member by their UserName 
-            return await _unitOfWork.UserRepository.GetMemberAsync(username);
+            return user;
         }
 
         [HttpPut]
@@ -90,14 +93,10 @@ namespace API.Controllers {
             if (result.Error != null) return BadRequest(result.Error.Message);
 
             // Create new Photo entity using result from Cloudinary
-            var photo = new Photo
-            {
+            var photo = new Photo {
                 Url = result.SecureUrl.AbsoluteUri,
                 PublicId = result.PublicId
             };
-
-            // Set this photo to main if the user has no photos
-            if (user.Photos.Count == 0) photo.IsMain = true;
 
             // Add to the user's photos
             user.Photos.Add(photo);
@@ -120,6 +119,9 @@ namespace API.Controllers {
 
             // Get the photo using the Id passed into the method
             var photo = user.Photos.FirstOrDefault(x => x.Id == photoId);
+
+            // If the Photo is not found, return NotFound
+            if (photo == null) return NotFound();
 
             // If the photo is already main, return a BadRequest
             if (photo.IsMain) return BadRequest("This is already your main photo");
@@ -144,7 +146,7 @@ namespace API.Controllers {
         public async Task<ActionResult> DeletePhoto(int photoId) {
             // Get the user from the UserRepository, using current logged in user from claims?
             // uses extension method from ClaimsPrincipleExtensions
-            var user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
+            var user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername(), true);
 
             // Get the photo using the Id passed into the method
             var photo = user.Photos.FirstOrDefault(x => x.Id == photoId);

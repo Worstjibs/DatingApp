@@ -1,1 +1,20 @@
-<p>photo-management works!</p>
+<div class="row">
+    <div *ngFor="let photo of photos" class="col-2 mt-2">
+        <div class="card" >
+            <div class="card-img-wrapper">
+                <img src="{{photo.url}}" alt="{{photo.url}}" class="card-img-top">
+            </div>
+
+            <div class="card-body p-1">
+                <h5 class="card-title text-center mb-1">                    
+                    <strong>{{photo.username}}</strong>
+                </h5>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-success btn-sm" (click)="approvePhoto(photo)">Approve</button>
+                <button class="btn btn-danger btn-sm" (click)="rejectPhoto(photo)">Reject</button>
+            </div>
+        </div>
+    </div>
+</div>

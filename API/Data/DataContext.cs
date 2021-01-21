@@ -21,6 +21,7 @@ namespace API.Data {
         public DataContext(DbContextOptions options) : base(options) {
         }
 
+        public DbSet<Photo> Photos { get; set; }
         public DbSet<UserLike> Likes { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Group> Groups { get; set; }
@@ -71,6 +72,8 @@ namespace API.Data {
                 .HasOne(m => m.Recipient)
                 .WithMany(u => u.MessagesReceived)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Photo>().HasQueryFilter(x => x.IsApproved);
 
             builder.ApplyUtcDateTimeConverter();
         }
